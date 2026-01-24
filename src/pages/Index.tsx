@@ -4,6 +4,7 @@ import Features from '@/components/home/Features';
 import FeaturedProducts from '@/components/home/FeaturedProducts';
 import Categories from '@/components/home/Categories';
 import CTASection from '@/components/home/CTASection';
+import OnlineUsersIndicator from '@/components/OnlineUsersIndicator';
 
 const Index = () => {
   return (
@@ -13,6 +14,7 @@ const Index = () => {
       <FeaturedProducts />
       <Categories />
       <CTASection />
+      <OnlineUsersIndicator />
     </Layout>
   );
 };
