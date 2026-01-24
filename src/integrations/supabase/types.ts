@@ -179,6 +179,45 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          billing_address: string | null
+          company_name: string | null
+          contact_person: string | null
+          created_at: string
+          gst_number: string | null
+          id: string
+          phone: string | null
+          shipping_address: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_address?: string | null
+          company_name?: string | null
+          contact_person?: string | null
+          created_at?: string
+          gst_number?: string | null
+          id?: string
+          phone?: string | null
+          shipping_address?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_address?: string | null
+          company_name?: string | null
+          contact_person?: string | null
+          created_at?: string
+          gst_number?: string | null
+          id?: string
+          phone?: string | null
+          shipping_address?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
