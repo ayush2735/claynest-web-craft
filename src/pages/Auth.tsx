@@ -10,27 +10,55 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
-const emailSchema = z.string().email('Please enter a valid email address');
-const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+const signupSchema = z.object({
+  companyName: z.string().min(1, 'Company name is required'),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Login form
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  
-  // Signup form
-  const [signupEmail, setSignupEmail] = useState('');
-  const [signupPassword, setSignupPassword] = useState('');
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [contactPerson, setContactPerson] = useState('');
-  const [phone, setPhone] = useState('');
+
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      companyName: '',
+      contactPerson: '',
+      phone: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
 
   useEffect(() => {
     // Check if user is already logged in
@@ -49,28 +77,12 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      emailSchema.parse(loginEmail);
-      passwordSchema.parse(loginPassword);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
+  const onLoginSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
-    
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password: loginPassword,
+      email: values.email,
+      password: values.password,
     });
 
     setIsLoading(false);
@@ -78,7 +90,7 @@ const Auth = () => {
     if (error) {
       toast({
         title: "Login Failed",
-        description: error.message === 'Invalid login credentials' 
+        description: error.message === 'Invalid login credentials'
           ? 'Invalid email or password. Please check your credentials.'
           : error.message,
         variant: "destructive",
@@ -92,48 +104,14 @@ const Auth = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      emailSchema.parse(signupEmail);
-      passwordSchema.parse(signupPassword);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          title: "Validation Error",
-          description: error.errors[0].message,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    if (signupPassword !== signupConfirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!companyName.trim()) {
-      toast({
-        title: "Company Required",
-        description: "Please enter your company name for B2B registration.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const onSignupSubmit = async (values: SignupFormValues) => {
     setIsLoading(true);
 
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { data, error } = await supabase.auth.signUp({
-      email: signupEmail,
-      password: signupPassword,
+      email: values.email,
+      password: values.password,
       options: {
         emailRedirectTo: redirectUrl,
       },
@@ -163,9 +141,9 @@ const Auth = () => {
         .from('profiles')
         .insert({
           user_id: data.user.id,
-          company_name: companyName,
-          contact_person: contactPerson,
-          phone: phone,
+          company_name: values.companyName,
+          contact_person: values.contactPerson || null,
+          phone: values.phone || null,
         });
 
       if (profileError) {
@@ -174,7 +152,7 @@ const Auth = () => {
     }
 
     setIsLoading(false);
-    
+
     toast({
       title: "Account Created!",
       description: "Welcome to Claynest! You can now browse and order products.",
@@ -198,139 +176,169 @@ const Auth = () => {
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={loginEmail}
-                      onChange={(e) => setLoginEmail(e.target.value)}
-                      required
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="your@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="login-password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Logging in...
-                      </>
-                    ) : (
-                      'Login'
-                    )}
-                  </Button>
-                </form>
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                {...field}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
+                              >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        'Login'
+                      )}
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
-              
+
               <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="company-name">Company Name *</Label>
-                    <Input
-                      id="company-name"
-                      type="text"
-                      placeholder="Your Company Ltd."
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      required
+                <Form {...signupForm}>
+                  <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+                    <FormField
+                      control={signupForm.control}
+                      name="companyName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your Company Ltd." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-person">Contact Person</Label>
-                    <Input
-                      id="contact-person"
-                      type="text"
-                      placeholder="John Doe"
-                      value={contactPerson}
-                      onChange={(e) => setContactPerson(e.target.value)}
+                    <FormField
+                      control={signupForm.control}
+                      name="contactPerson"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Person</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+91 9876543210"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                    <FormField
+                      control={signupForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="+91 9876543210" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email *</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="your@company.com"
-                      value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
-                      required
+                    <FormField
+                      control={signupForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email *</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="your@company.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password *</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Min. 6 characters"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm Password *</Label>
-                    <Input
-                      id="confirm-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={signupConfirmPassword}
-                      onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                      required
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password *</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Min. 6 characters"
+                                {...field}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
+                              >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating Account...
-                      </>
-                    ) : (
-                      'Create Account'
-                    )}
-                  </Button>
-                </form>
+                    <FormField
+                      control={signupForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password *</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={isLoading}>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating Account...
+                        </>
+                      ) : (
+                        'Create Account'
+                      )}
+                    </Button>
+                  </form>
+                </Form>
               </TabsContent>
             </Tabs>
           </CardContent>
