@@ -4,12 +4,12 @@ import { Phone, Mail } from 'lucide-react';
 
 const CTASection = () => {
   return (
-    <section className="py-20 bg-primary">
+    <section className="py-20 bg-charcoal">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="font-display text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
+        <h2 className="font-display text-4xl md:text-5xl font-bold text-cream mb-4">
           Ready to Order?
         </h2>
-        <p className="text-primary-foreground/80 max-w-2xl mx-auto mb-8 text-lg">
+        <p className="text-sand max-w-2xl mx-auto mb-8 text-lg">
           Contact us for custom orders, bulk pricing, or to discuss your business needs. 
           Our team is ready to help you find the perfect ceramics for your brand.
         </p>
@@ -17,7 +17,7 @@ const CTASection = () => {
           <Button
             asChild
             size="lg"
-            className="bg-cream text-charcoal hover:bg-charcoal hover:text-cream transition-all duration-300 hover:scale-105 font-medium px-8"
+            className="bg-terracotta text-cream hover:bg-cream hover:text-terracotta transition-all duration-300 hover:scale-110 hover:shadow-strong font-medium px-8"
           >
             <Link to="/contact">Get a Quote</Link>
           </Button>
@@ -25,7 +25,7 @@ const CTASection = () => {
             asChild
             variant="outline"
             size="lg"
-            className="border-cream text-cream hover:bg-cream hover:text-charcoal transition-all duration-300 hover:scale-105 font-medium px-8"
+            className="border-sage text-sage hover:bg-sage hover:text-charcoal transition-all duration-300 hover:scale-110 hover:shadow-strong font-medium px-8"
           >
             <a href="tel:9369635323">
               <Phone className="mr-2 h-5 w-5" />
