@@ -46,7 +46,7 @@ const Hero = () => {
               asChild
               variant="outline"
               size="lg"
-              className="border-cream/30 text-cream hover:bg-cream/10 font-medium px-8"
+              className="border-sage bg-sage/20 text-cream hover:bg-sage hover:text-charcoal transition-all duration-300 font-medium px-8"
             >
               <a href="tel:9369635323">
                 <Phone className="mr-2 h-5 w-5" />
