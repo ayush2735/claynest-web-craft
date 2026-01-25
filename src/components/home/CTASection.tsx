@@ -17,7 +17,7 @@ const CTASection = () => {
           <Button
             asChild
             size="lg"
-            className="bg-cream text-charcoal hover:bg-cream/90 font-medium px-8"
+            className="bg-cream text-charcoal hover:bg-charcoal hover:text-cream transition-all duration-300 hover:scale-105 font-medium px-8"
           >
             <Link to="/contact">Get a Quote</Link>
           </Button>
@@ -25,7 +25,7 @@ const CTASection = () => {
             asChild
             variant="outline"
             size="lg"
-            className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 font-medium px-8"
+            className="border-cream text-cream hover:bg-cream hover:text-charcoal transition-all duration-300 hover:scale-105 font-medium px-8"
           >
             <a href="tel:9369635323">
               <Phone className="mr-2 h-5 w-5" />
