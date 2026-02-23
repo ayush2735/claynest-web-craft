@@ -16,6 +16,7 @@ import {
 const Header = () => {
   const { totalItems } = useCart();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -29,7 +30,10 @@ const Header = () => {
     { name: 'Products', href: '/products' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
-    { name: 'Analytics', href: '/analytics' },
+    ...(isAdmin ? [
+      { name: 'Analytics', href: '/analytics' },
+      { name: 'Admin', href: '/admin' },
+    ] : []),
   ];
 
   return (
