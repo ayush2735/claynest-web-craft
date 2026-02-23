@@ -1,14 +1,17 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
-import { Users, ShoppingBag, Package, TrendingUp, Eye, DollarSign } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Users, ShoppingBag, Package, TrendingUp, DollarSign, Shield } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 
 const Analytics = () => {
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: roleLoading } = useUserRole();
   const { onlineCount } = useOnlineUsers();
-
   // Fetch orders stats
   const { data: ordersData } = useQuery({
     queryKey: ['analytics', 'orders'],
@@ -50,6 +53,22 @@ const Analytics = () => {
 
   // Recent orders
   const recentOrders = ordersData?.slice(0, 5) || [];
+
+  if (authLoading || roleLoading) {
+    return <Layout><div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Loading...</div></Layout>;
+  }
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isAdmin) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-20 text-center">
+          <Shield className="h-16 w-16 text-destructive mx-auto mb-4" />
+          <h1 className="text-3xl font-display font-bold text-foreground mb-2">Access Denied</h1>
+          <p className="text-muted-foreground">Admin privileges required.</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

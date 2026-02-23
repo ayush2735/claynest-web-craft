@@ -4,6 +4,7 @@ import { ShoppingBag, Menu, Phone, Mail, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ import {
 const Header = () => {
   const { totalItems } = useCart();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,7 +30,10 @@ const Header = () => {
     { name: 'Products', href: '/products' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
-    { name: 'Analytics', href: '/analytics' },
+    ...(isAdmin ? [
+      { name: 'Analytics', href: '/analytics' },
+      { name: 'Admin', href: '/admin' },
+    ] : []),
   ];
 
   return (
