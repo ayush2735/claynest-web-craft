@@ -9,8 +9,9 @@ import { Users, ShoppingBag, Package, TrendingUp, DollarSign, Shield } from 'luc
 import { Navigate } from 'react-router-dom';
 
 const Analytics = () => {
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: roleLoading } = useUserRole();
   const { onlineCount } = useOnlineUsers();
-
   // Fetch orders stats
   const { data: ordersData } = useQuery({
     queryKey: ['analytics', 'orders'],
