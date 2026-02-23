@@ -54,6 +54,22 @@ const Analytics = () => {
   // Recent orders
   const recentOrders = ordersData?.slice(0, 5) || [];
 
+  if (authLoading || roleLoading) {
+    return <Layout><div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Loading...</div></Layout>;
+  }
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isAdmin) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-20 text-center">
+          <Shield className="h-16 w-16 text-destructive mx-auto mb-4" />
+          <h1 className="text-3xl font-display font-bold text-foreground mb-2">Access Denied</h1>
+          <p className="text-muted-foreground">Admin privileges required.</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
