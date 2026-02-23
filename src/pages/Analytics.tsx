@@ -1,10 +1,12 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useOnlineUsers } from '@/hooks/useOnlineUsers';
-import { Users, ShoppingBag, Package, TrendingUp, Eye, DollarSign } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Users, ShoppingBag, Package, TrendingUp, DollarSign, Shield } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 
 const Analytics = () => {
   const { onlineCount } = useOnlineUsers();
