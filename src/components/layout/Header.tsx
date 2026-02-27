@@ -61,7 +61,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <span className="font-display text-3xl font-bold text-foreground">
-              Clay<span className="text-primary">nest</span>
+              Cermico<span className="text-primary">nest</span>
             </span>
           </Link>
 

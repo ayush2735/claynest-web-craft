@@ -9,7 +9,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <h3 className="font-display text-3xl font-bold text-cream mb-4">
-              Clay<span className="text-primary">nest</span>
+              Cermico<span className="text-primary">nest</span>
             </h3>
             <p className="text-secondary/70 max-w-md mb-6">
               Premium handcrafted ceramics for businesses. We specialize in bulk orders 
@@ -78,7 +78,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-secondary/20 mt-12 pt-8 text-center text-secondary/50">
-          <p>&copy; {new Date().getFullYear()} Claynest. All rights reserved. Premium B2B Ceramics.</p>
+          <p>&copy; {new Date().getFullYear()} Cermiconest. All rights reserved. Premium B2B Ceramics.</p>
         </div>
       </div>
     </footer>
