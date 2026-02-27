@@ -12,7 +12,7 @@ const About = () => {
         <div className="absolute inset-0 z-0">
           <img
             src={heroImage}
-            alt="About Claynest"
+            alt="About Cermiconest"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-charcoal/80" />
@@ -27,8 +27,8 @@ const About = () => {
               Crafting Excellence in Clay
             </h1>
             <p className="text-cream/80 text-lg">
-              Claynest is a premium B2B ceramics supplier dedicated to providing 
-              handcrafted, high-quality ceramic products to businesses across India.
+               Cermiconest is a premium B2B ceramics supplier dedicated to providing 
+               handcrafted, high-quality ceramic products to businesses across India.
             </p>
           </div>
         </div>
@@ -43,7 +43,7 @@ const About = () => {
                 Our Mission
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                At Claynest, we believe that every dining experience deserves exceptional 
+                At Cermiconest, we believe that every dining experience deserves exceptional 
                 tableware. We partner with skilled artisans to bring you ceramics that 
                 combine traditional craftsmanship with contemporary design. Our goal is 
                 to help restaurants, hotels, cafes, and retailers create memorable 
