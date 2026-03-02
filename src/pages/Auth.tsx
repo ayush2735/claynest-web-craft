@@ -61,16 +61,28 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    // Check if user is already logged in
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        navigate('/');
+        // Check if user is admin and redirect accordingly
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        navigate(data ? '/admin' : '/');
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        navigate('/');
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        navigate(data ? '/admin' : '/');
       }
     });
 
@@ -155,7 +167,7 @@ const Auth = () => {
 
     toast({
       title: "Account Created!",
-      description: "Welcome to Claynest! You can now browse and order products.",
+      description: "Welcome to Cermiconest! You can now browse and order products.",
     });
     navigate('/');
   };
@@ -163,10 +175,10 @@ const Auth = () => {
   return (
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-        <Card className="w-full max-w-md border-clay-200 shadow-xl">
+        <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-playfair text-clay-800">Welcome to Claynest</CardTitle>
-            <CardDescription className="text-clay-600">
+            <CardTitle className="text-3xl font-display text-foreground">Welcome to Cermiconest</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Your B2B partner for premium ceramics
             </CardDescription>
           </CardHeader>
@@ -209,7 +221,7 @@ const Auth = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
+                               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                               >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                               </button>
@@ -304,7 +316,7 @@ const Auth = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                               >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                               </button>
