@@ -9,15 +9,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { Pencil, Trash2, Plus, Package, ShoppingBag, MessageSquare, Shield, Upload, Image, Eye, Search } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import {
+  Pencil, Trash2, Plus, Package, ShoppingBag, MessageSquare, Shield,
+  Upload, Image, Search, IndianRupee, Eye, BarChart3, Users, AlertTriangle, LogOut
+} from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
 
-const categories = ['cups', 'plates', 'pots', 'bowls', 'vases', 'other'];
+const categories = ['cups', 'plates', 'pots', 'bowls', 'vases', 'tiles', 'decorative', 'other'];
 
 const emptyProduct = {
   name: '', description: '', category: 'cups', price: 0,
@@ -25,15 +28,19 @@ const emptyProduct = {
 };
 
 const AdminDashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { isAdmin, isLoading: roleLoading } = useUserRole();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState(emptyProduct);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [orderDetailOpen, setOrderDetailOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [inquiryFilter, setInquiryFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: products } = useQuery({
@@ -61,6 +68,17 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: orderItems } = useQuery({
+    queryKey: ['admin-order-items', selectedOrder?.id],
+    queryFn: async () => {
+      if (!selectedOrder) return [];
+      const { data, error } = await supabase.from('order_items').select('*').eq('order_id', selectedOrder.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedOrder,
   });
 
   const handleImageUpload = async (file: File) => {
@@ -130,6 +148,17 @@ const AdminDashboard = () => {
     },
   });
 
+  const updatePaymentStatus = useMutation({
+    mutationFn: async ({ id, payment_status }: { id: string; payment_status: string }) => {
+      const { error } = await supabase.from('orders').update({ payment_status }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      toast({ title: 'Payment status updated' });
+    },
+  });
+
   const updateInquiryStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase.from('inquiries').update({ status }).eq('id', id);
@@ -174,10 +203,12 @@ const AdminDashboard = () => {
     setDialogOpen(true);
   };
 
-  const filteredProducts = products?.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products?.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   const filteredInquiries = inquiries?.filter(inq =>
     inquiryFilter === 'all' || inq.status === inquiryFilter
@@ -185,48 +216,87 @@ const AdminDashboard = () => {
 
   const totalRevenue = orders?.reduce((sum, o) => sum + Number(o.total_amount), 0) || 0;
   const pendingOrders = orders?.filter(o => o.status === 'pending').length || 0;
+  const lowStockProducts = products?.filter(p => p.stock_quantity < 50).length || 0;
+  const newInquiries = inquiries?.filter(i => i.status === 'new').length || 0;
+
+  const handleAdminLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-8">
-          <Shield className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-display font-bold text-foreground">Admin Dashboard</h1>
+        {/* Admin Header */}
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <Shield className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-display font-bold text-foreground">Admin Dashboard</h1>
+              <p className="text-sm text-muted-foreground">Welcome, {user.email}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/analytics')} className="gap-2">
+              <BarChart3 className="h-4 w-4" />Analytics
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleAdminLogout} className="gap-2">
+              <LogOut className="h-4 w-4" />Logout
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 text-center">
+              <Package className="h-6 w-6 mx-auto mb-2 text-primary" />
               <div className="text-2xl font-bold text-foreground">{products?.length || 0}</div>
-              <p className="text-sm text-muted-foreground">Total Products</p>
+              <p className="text-xs text-muted-foreground">Products</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 text-center">
+              <ShoppingBag className="h-6 w-6 mx-auto mb-2 text-primary" />
               <div className="text-2xl font-bold text-foreground">{orders?.length || 0}</div>
-              <p className="text-sm text-muted-foreground">Total Orders</p>
+              <p className="text-xs text-muted-foreground">Orders</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 text-center">
+              <IndianRupee className="h-6 w-6 mx-auto mb-2 text-primary" />
               <div className="text-2xl font-bold text-primary">₹{totalRevenue.toLocaleString()}</div>
-              <p className="text-sm text-muted-foreground">Total Revenue</p>
+              <p className="text-xs text-muted-foreground">Revenue</p>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6 text-center">
+              <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-destructive" />
               <div className="text-2xl font-bold text-destructive">{pendingOrders}</div>
-              <p className="text-sm text-muted-foreground">Pending Orders</p>
+              <p className="text-xs text-muted-foreground">Pending</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <Package className="h-6 w-6 mx-auto mb-2 text-destructive" />
+              <div className="text-2xl font-bold text-destructive">{lowStockProducts}</div>
+              <p className="text-xs text-muted-foreground">Low Stock</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <MessageSquare className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <div className="text-2xl font-bold text-foreground">{newInquiries}</div>
+              <p className="text-xs text-muted-foreground">New Inquiries</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="products">
           <TabsList className="mb-6">
-            <TabsTrigger value="products" className="gap-2"><Package className="h-4 w-4" />Products ({products?.length || 0})</TabsTrigger>
-            <TabsTrigger value="orders" className="gap-2"><ShoppingBag className="h-4 w-4" />Orders ({orders?.length || 0})</TabsTrigger>
-            <TabsTrigger value="inquiries" className="gap-2"><MessageSquare className="h-4 w-4" />Inquiries ({inquiries?.length || 0})</TabsTrigger>
+            <TabsTrigger value="products" className="gap-2"><Package className="h-4 w-4" />Products</TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2"><ShoppingBag className="h-4 w-4" />Orders</TabsTrigger>
+            <TabsTrigger value="inquiries" className="gap-2"><MessageSquare className="h-4 w-4" />Inquiries</TabsTrigger>
           </TabsList>
 
           {/* PRODUCTS TAB */}
@@ -234,11 +304,18 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
                 <CardTitle>Manage Products</CardTitle>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <div className="relative">
                     <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input placeholder="Search products..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 w-[200px]" />
+                    <Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 w-[180px]" />
                   </div>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                   <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" />Add Product</Button>
                 </div>
               </CardHeader>
@@ -252,6 +329,7 @@ const AdminDashboard = () => {
                         <TableHead>Category</TableHead>
                         <TableHead>Price</TableHead>
                         <TableHead>Stock</TableHead>
+                        <TableHead>Min Qty</TableHead>
                         <TableHead>Featured</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -272,10 +350,11 @@ const AdminDashboard = () => {
                           <TableCell><Badge variant="secondary" className="capitalize">{p.category}</Badge></TableCell>
                           <TableCell>₹{Number(p.price).toLocaleString()}</TableCell>
                           <TableCell>
-                            <span className={p.stock_quantity < 100 ? 'text-destructive font-semibold' : ''}>
+                            <span className={p.stock_quantity < 50 ? 'text-destructive font-semibold' : ''}>
                               {p.stock_quantity}
                             </span>
                           </TableCell>
+                          <TableCell>{p.min_order_quantity}</TableCell>
                           <TableCell>{p.is_featured ? '⭐' : '—'}</TableCell>
                           <TableCell className="text-right space-x-2">
                             <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
@@ -284,7 +363,7 @@ const AdminDashboard = () => {
                         </TableRow>
                       ))}
                       {(!filteredProducts || filteredProducts.length === 0) && (
-                        <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No products found</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No products found</TableCell></TableRow>
                       )}
                     </TableBody>
                   </Table>
@@ -308,7 +387,7 @@ const AdminDashboard = () => {
                         <TableHead>Status</TableHead>
                         <TableHead>Payment</TableHead>
                         <TableHead>Date</TableHead>
-                        <TableHead>Update Status</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -321,25 +400,30 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>₹{Number(o.total_amount).toLocaleString()}</TableCell>
                           <TableCell>
-                            <Badge variant={o.status === 'pending' ? 'destructive' : o.status === 'delivered' ? 'default' : 'secondary'}>
-                              {o.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={o.payment_status === 'paid' ? 'default' : 'outline'}>
-                              {o.payment_status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm">{new Date(o.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell>
                             <Select defaultValue={o.status} onValueChange={(v) => updateOrderStatus.mutate({ id: o.id, status: v })}>
-                              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 {['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'].map(s => (
                                   <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Select defaultValue={o.payment_status} onValueChange={(v) => updatePaymentStatus.mutate({ id: o.id, payment_status: v })}>
+                              <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {['pending', 'paid', 'refunded', 'failed'].map(s => (
+                                  <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-sm">{new Date(o.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" onClick={() => { setSelectedOrder(o); setOrderDetailOpen(true); }}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -423,10 +507,13 @@ const AdminDashboard = () => {
           <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+              <DialogDescription>
+                {editingProduct ? 'Update product details, image, and inventory.' : 'Fill in the details to add a new product.'}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={(e) => { e.preventDefault(); saveProduct.mutate(editingProduct ? { ...productForm, id: editingProduct.id } : productForm); }} className="space-y-4">
               <Input placeholder="Product name" value={productForm.name} onChange={(e) => setProductForm(p => ({ ...p, name: e.target.value }))} required />
-              <Textarea placeholder="Description" value={productForm.description} onChange={(e) => setProductForm(p => ({ ...p, description: e.target.value }))} />
+              <Textarea placeholder="Description" value={productForm.description} onChange={(e) => setProductForm(p => ({ ...p, description: e.target.value }))} rows={3} />
               <div className="grid grid-cols-2 gap-4">
                 <Select value={productForm.category} onValueChange={(v) => setProductForm(p => ({ ...p, category: v }))}>
                   <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
@@ -434,7 +521,7 @@ const AdminDashboard = () => {
                     {categories.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <Input type="number" placeholder="Price" value={productForm.price || ''} onChange={(e) => setProductForm(p => ({ ...p, price: Number(e.target.value) }))} required />
+                <Input type="number" placeholder="Price (₹)" value={productForm.price || ''} onChange={(e) => setProductForm(p => ({ ...p, price: Number(e.target.value) }))} required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <Input type="number" placeholder="Min order qty" value={productForm.min_order_quantity || ''} onChange={(e) => setProductForm(p => ({ ...p, min_order_quantity: Number(e.target.value) }))} />
@@ -470,6 +557,81 @@ const AdminDashboard = () => {
                 {saveProduct.isPending ? 'Saving...' : editingProduct ? 'Update Product' : 'Add Product'}
               </Button>
             </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Order Detail Dialog */}
+        <Dialog open={orderDetailOpen} onOpenChange={setOrderDetailOpen}>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order Details</DialogTitle>
+              <DialogDescription>Order #{selectedOrder?.id.slice(0, 8)}</DialogDescription>
+            </DialogHeader>
+            {selectedOrder && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Customer</p>
+                    <p className="font-medium">{selectedOrder.customer_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Email</p>
+                    <p className="font-medium">{selectedOrder.customer_email}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Phone</p>
+                    <p className="font-medium">{selectedOrder.customer_phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Company</p>
+                    <p className="font-medium">{selectedOrder.company_name || '—'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Shipping Address</p>
+                    <p className="font-medium">{selectedOrder.shipping_address}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Total Amount</p>
+                    <p className="font-bold text-primary">₹{Number(selectedOrder.total_amount).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Date</p>
+                    <p className="font-medium">{new Date(selectedOrder.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+                {selectedOrder.notes && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Notes</p>
+                    <p className="text-sm bg-muted p-3 rounded">{selectedOrder.notes}</p>
+                  </div>
+                )}
+                {orderItems && orderItems.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Order Items</p>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Product ID</TableHead>
+                          <TableHead>Qty</TableHead>
+                          <TableHead>Unit Price</TableHead>
+                          <TableHead>Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orderItems.map(item => (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-mono text-xs">{item.product_id.slice(0, 8)}...</TableCell>
+                            <TableCell>{item.quantity}</TableCell>
+                            <TableCell>₹{Number(item.unit_price).toLocaleString()}</TableCell>
+                            <TableCell>₹{Number(item.total_price).toLocaleString()}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
