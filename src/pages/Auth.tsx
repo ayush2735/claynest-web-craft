@@ -155,7 +155,7 @@ const Auth = () => {
 
     toast({
       title: "Account Created!",
-      description: "Welcome to Claynest! You can now browse and order products.",
+      description: "Welcome to Cermiconest! You can now browse and order products.",
     });
     navigate('/');
   };
@@ -163,10 +163,10 @@ const Auth = () => {
   return (
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-        <Card className="w-full max-w-md border-clay-200 shadow-xl">
+        <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-playfair text-clay-800">Welcome to Claynest</CardTitle>
-            <CardDescription className="text-clay-600">
+            <CardTitle className="text-3xl font-display text-foreground">Welcome to Cermiconest</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Your B2B partner for premium ceramics
             </CardDescription>
           </CardHeader>
@@ -209,7 +209,7 @@ const Auth = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
+                               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                               >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                               </button>
@@ -304,7 +304,7 @@ const Auth = () => {
                               <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-clay-500 hover:text-clay-700"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                               >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                               </button>
