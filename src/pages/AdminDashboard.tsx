@@ -81,9 +81,14 @@ const AdminDashboard = () => {
     enabled: !!selectedOrder,
   });
 
-  // Build product name map for order items
+  // Build product name & image map for order items
   const productNameMap = products?.reduce((acc, p) => {
     acc[p.id] = p.name;
+    return acc;
+  }, {} as Record<string, string>) || {};
+
+  const productImageMap = products?.reduce((acc, p) => {
+    if (p.image_url) acc[p.id] = p.image_url;
     return acc;
   }, {} as Record<string, string>) || {};
 
@@ -614,26 +619,24 @@ const AdminDashboard = () => {
                 {orderItems && orderItems.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2">Order Items</p>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Product</TableHead>
-                          <TableHead>Qty</TableHead>
-                          <TableHead>Unit Price</TableHead>
-                          <TableHead>Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {orderItems.map(item => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium text-sm">{productNameMap[item.product_id] || item.product_id.slice(0, 8)}</TableCell>
-                            <TableCell>{item.quantity}</TableCell>
-                            <TableCell>₹{Number(item.unit_price).toLocaleString()}</TableCell>
-                            <TableCell>₹{Number(item.total_price).toLocaleString()}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                    <div className="space-y-3">
+                      {orderItems.map(item => (
+                        <div key={item.id} className="flex items-center gap-3 border border-border rounded-lg p-2">
+                          {productImageMap[item.product_id] ? (
+                            <img src={productImageMap[item.product_id]} alt={productNameMap[item.product_id] || 'Product'} className="w-14 h-14 object-cover rounded-md flex-shrink-0" />
+                          ) : (
+                            <div className="w-14 h-14 bg-muted rounded-md flex items-center justify-center flex-shrink-0">
+                              <Image className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{productNameMap[item.product_id] || 'Unknown Product'}</p>
+                            <p className="text-xs text-muted-foreground">Qty: {item.quantity} × ₹{Number(item.unit_price).toLocaleString()}</p>
+                          </div>
+                          <p className="font-bold text-sm flex-shrink-0">₹{Number(item.total_price).toLocaleString()}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
