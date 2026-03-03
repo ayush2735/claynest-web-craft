@@ -237,6 +237,55 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
+  const exportOrdersCSV = () => {
+    if (!orders || orders.length === 0) {
+      toast({ title: 'No orders to export', variant: 'destructive' });
+      return;
+    }
+    const headers = ['Order ID', 'Customer', 'Email', 'Phone', 'Company', 'Amount', 'Status', 'Payment', 'Date'];
+    const rows = orders.map(o => [
+      o.id, o.customer_name, o.customer_email, o.customer_phone || '', o.company_name || '',
+      Number(o.total_amount).toFixed(2), o.status, o.payment_status,
+      new Date(o.created_at).toLocaleDateString()
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Orders exported as CSV' });
+  };
+
+  const exportOrdersPDF = () => {
+    if (!orders || orders.length === 0) {
+      toast({ title: 'No orders to export', variant: 'destructive' });
+      return;
+    }
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('Cermiconest - Orders Report', 14, 22);
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`Total Orders: ${orders.length} | Revenue: ₹${totalRevenue.toLocaleString()}`, 14, 36);
+
+    autoTable(doc, {
+      startY: 42,
+      head: [['#', 'Customer', 'Amount', 'Status', 'Payment', 'Date']],
+      body: orders.map((o, i) => [
+        i + 1, o.customer_name, `₹${Number(o.total_amount).toLocaleString()}`,
+        o.status, o.payment_status, new Date(o.created_at).toLocaleDateString()
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [139, 90, 43] },
+    });
+
+    doc.save(`orders-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast({ title: 'Orders exported as PDF' });
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
