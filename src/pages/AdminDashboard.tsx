@@ -299,10 +299,10 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="products">
-          <TabsList className="mb-6">
-            <TabsTrigger value="products" className="gap-2"><Package className="h-4 w-4" />Products</TabsTrigger>
-            <TabsTrigger value="orders" className="gap-2"><ShoppingBag className="h-4 w-4" />Orders</TabsTrigger>
-            <TabsTrigger value="inquiries" className="gap-2"><MessageSquare className="h-4 w-4" />Inquiries</TabsTrigger>
+          <TabsList className="mb-6 w-full sm:w-auto flex">
+            <TabsTrigger value="products" className="gap-1.5 flex-1 sm:flex-none text-xs sm:text-sm"><Package className="h-4 w-4" /><span className="hidden sm:inline">Products</span><span className="sm:hidden">Items</span></TabsTrigger>
+            <TabsTrigger value="orders" className="gap-1.5 flex-1 sm:flex-none text-xs sm:text-sm"><ShoppingBag className="h-4 w-4" /><span>Orders</span></TabsTrigger>
+            <TabsTrigger value="inquiries" className="gap-1.5 flex-1 sm:flex-none text-xs sm:text-sm"><MessageSquare className="h-4 w-4" /><span className="hidden sm:inline">Inquiries</span><span className="sm:hidden">Msgs</span></TabsTrigger>
           </TabsList>
 
           {/* PRODUCTS TAB */}
