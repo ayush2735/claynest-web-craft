@@ -16,9 +16,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import {
   Pencil, Trash2, Plus, Package, ShoppingBag, MessageSquare, Shield,
-  Upload, Image, Search, IndianRupee, Eye, BarChart3, Users, AlertTriangle, LogOut
+  Upload, Image, Search, IndianRupee, Eye, BarChart3, Users, AlertTriangle, LogOut, Download, FileText
 } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const categories = ['cups', 'plates', 'pots', 'bowls', 'vases', 'tiles', 'decorative', 'other'];
 
@@ -386,7 +388,19 @@ const AdminDashboard = () => {
           {/* ORDERS TAB */}
           <TabsContent value="orders">
             <Card>
-              <CardHeader><CardTitle>Manage Orders</CardTitle></CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-4">
+                <CardTitle>Manage Orders</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportOrdersCSV()}>
+                    <Download className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">CSV</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportOrdersPDF()}>
+                    <FileText className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">PDF</span>
+                  </Button>
+                </div>
+              </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <Table>
