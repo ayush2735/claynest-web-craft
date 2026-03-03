@@ -81,6 +81,12 @@ const AdminDashboard = () => {
     enabled: !!selectedOrder,
   });
 
+  // Build product name map for order items
+  const productNameMap = products?.reduce((acc, p) => {
+    acc[p.id] = p.name;
+    return acc;
+  }, {} as Record<string, string>) || {};
+
   const handleImageUpload = async (file: File) => {
     setUploading(true);
     try {
@@ -611,7 +617,7 @@ const AdminDashboard = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Product ID</TableHead>
+                          <TableHead>Product</TableHead>
                           <TableHead>Qty</TableHead>
                           <TableHead>Unit Price</TableHead>
                           <TableHead>Total</TableHead>
@@ -620,7 +626,7 @@ const AdminDashboard = () => {
                       <TableBody>
                         {orderItems.map(item => (
                           <TableRow key={item.id}>
-                            <TableCell className="font-mono text-xs">{item.product_id.slice(0, 8)}...</TableCell>
+                            <TableCell className="font-medium text-sm">{productNameMap[item.product_id] || item.product_id.slice(0, 8)}</TableCell>
                             <TableCell>{item.quantity}</TableCell>
                             <TableCell>₹{Number(item.unit_price).toLocaleString()}</TableCell>
                             <TableCell>₹{Number(item.total_price).toLocaleString()}</TableCell>
