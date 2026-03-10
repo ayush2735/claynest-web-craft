@@ -31,7 +31,7 @@ const Analytics = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, category, stock_quantity, price');
+        .select('id, name, category, stock_quantity, price, image_url');
       if (error) throw error;
       return data;
     },
@@ -58,6 +58,11 @@ const Analytics = () => {
     acc[p.id] = p.name;
     return acc;
   }, {} as Record<string, string>) || {};
+
+  const productImageMap = productsData?.reduce((acc, p) => {
+    acc[p.id] = p.image_url;
+    return acc;
+  }, {} as Record<string, string | null>) || {};
 
   // Group order items by order_id
   const orderItemsMap = recentOrderItems?.reduce((acc, item) => {
@@ -245,11 +250,18 @@ const Analytics = () => {
                           <div className="bg-muted/50 rounded p-2 space-y-1">
                             <p className="text-xs font-medium text-muted-foreground mb-1">Items ordered:</p>
                             {items.map((item, idx) => (
-                              <div key={idx} className="flex justify-between text-xs">
+                              <div key={idx} className="flex items-center gap-2 text-xs">
+                                {productImageMap[item.product_id] ? (
+                                  <img src={productImageMap[item.product_id]!} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                                    <Package className="h-3.5 w-3.5 text-muted-foreground" />
+                                  </div>
+                                )}
                                 <span className="truncate mr-2">
                                   {productNameMap[item.product_id] || 'Unknown Product'} × {item.quantity}
                                 </span>
-                                <span className="flex-shrink-0 font-medium">₹{Number(item.total_price).toLocaleString()}</span>
+                                <span className="flex-shrink-0 font-medium ml-auto">₹{Number(item.total_price).toLocaleString()}</span>
                               </div>
                             ))}
                           </div>
