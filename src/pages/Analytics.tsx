@@ -31,7 +31,7 @@ const Analytics = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, category, stock_quantity, price');
+        .select('id, name, category, stock_quantity, price, image_url');
       if (error) throw error;
       return data;
     },
