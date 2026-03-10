@@ -59,6 +59,11 @@ const Analytics = () => {
     return acc;
   }, {} as Record<string, string>) || {};
 
+  const productImageMap = productsData?.reduce((acc, p) => {
+    acc[p.id] = p.image_url;
+    return acc;
+  }, {} as Record<string, string | null>) || {};
+
   // Group order items by order_id
   const orderItemsMap = recentOrderItems?.reduce((acc, item) => {
     if (!acc[item.order_id]) acc[item.order_id] = [];
