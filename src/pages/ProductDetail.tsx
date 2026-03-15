@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Layout from '@/components/layout/Layout';
 import { useProduct } from '@/hooks/useProducts';
 import { useCart } from '@/contexts/CartContext';
+import { useWishlist } from '@/hooks/useWishlist';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShoppingBag, ArrowLeft, Package, Truck, Shield } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Package, Truck, Shield, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { getProductImage } from '@/lib/productImages';
+import ImageLightbox from '@/components/products/ImageLightbox';
+import ReviewSection from '@/components/products/ReviewSection';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { data: product, isLoading, error } = useProduct(id!);
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(0);
 
   const handleAddToCart = () => {
@@ -58,10 +63,11 @@ const ProductDetail = () => {
     );
   }
 
+  const inWishlist = isInWishlist(product.id);
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12">
-        {/* Breadcrumb */}
         <Link
           to="/products"
           className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors mb-8"
@@ -71,17 +77,16 @@ const ProductDetail = () => {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Image */}
-          <div className="aspect-square rounded-lg overflow-hidden bg-muted shadow-medium">
-            <img
+          {/* Product Image with Lightbox */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+            <ImageLightbox
               src={product.image_url || getProductImage(product.category)}
               alt={product.name}
-              className="w-full h-full object-cover"
             />
-          </div>
+          </motion.div>
 
           {/* Product Info */}
-          <div>
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
             <span className="inline-block text-primary font-medium tracking-wider uppercase text-sm mb-2">
               {product.category}
             </span>
@@ -112,7 +117,7 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Add to Cart */}
+            {/* Add to Cart & Wishlist */}
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <label className="text-sm font-medium text-foreground">Quantity:</label>
@@ -125,15 +130,25 @@ const ProductDetail = () => {
                   className="w-32"
                 />
               </div>
-              <Button
-                onClick={handleAddToCart}
-                size="lg"
-                className="w-full md:w-auto bg-primary hover:bg-primary/90 font-medium px-12"
-                disabled={product.stock_quantity === 0}
-              >
-                <ShoppingBag className="mr-2 h-5 w-5" />
-                Add to Cart
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleAddToCart}
+                  size="lg"
+                  className="flex-1 md:flex-none bg-primary hover:bg-primary/90 font-medium px-12"
+                  disabled={product.stock_quantity === 0}
+                >
+                  <ShoppingBag className="mr-2 h-5 w-5" />
+                  Add to Cart
+                </Button>
+                <Button
+                  onClick={() => toggleWishlist.mutate(product.id)}
+                  size="lg"
+                  variant="outline"
+                  className={inWishlist ? 'text-destructive border-destructive/30' : ''}
+                >
+                  <Heart className={`h-5 w-5 ${inWishlist ? 'fill-destructive' : ''}`} />
+                </Button>
+              </div>
             </div>
 
             {/* Features */}
@@ -155,8 +170,11 @@ const ProductDetail = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
+
+        {/* Reviews Section */}
+        <ReviewSection productId={product.id} />
       </div>
     </Layout>
   );
