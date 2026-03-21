@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle } from 'lucide-react';
+import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
 
 const Checkout = () => {
   const { items, totalAmount, clearCart } = useCart();
