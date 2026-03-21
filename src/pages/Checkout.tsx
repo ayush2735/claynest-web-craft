@@ -186,7 +186,9 @@ const Checkout = () => {
                   placeholder="Special instructions or customization requests"
                   rows={3}
                 />
-              </div>
+            </div>
+
+            <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
             </div>
 
             <Button
