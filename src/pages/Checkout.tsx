@@ -9,11 +9,13 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle } from 'lucide-react';
+import PaymentMethodSelector from '@/components/checkout/PaymentMethodSelector';
 
 const Checkout = () => {
   const { items, totalAmount, clearCart } = useCart();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_email: '',
@@ -50,6 +52,8 @@ const Checkout = () => {
           shipping_address: formData.shipping_address,
           total_amount: totalAmount,
           notes: formData.notes || null,
+          payment_method: paymentMethod,
+          payment_status: paymentMethod === 'cod' ? 'cod_pending' : 'pending',
         })
         .select()
         .single();
@@ -182,7 +186,9 @@ const Checkout = () => {
                   placeholder="Special instructions or customization requests"
                   rows={3}
                 />
-              </div>
+            </div>
+
+            <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
             </div>
 
             <Button
