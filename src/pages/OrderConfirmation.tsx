@@ -77,12 +77,19 @@ const OrderConfirmation = () => {
             </div>
           </div>
 
-          <Button asChild size="lg">
-            <Link to="/products">
-              Continue Shopping
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="outline">
+              <Link to="/track-order">
+                Track Your Order
+              </Link>
+            </Button>
+            <Button asChild size="lg">
+              <Link to="/products">
+                Continue Shopping
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </Layout>
