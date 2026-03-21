@@ -15,6 +15,7 @@ const Checkout = () => {
   const { items, totalAmount, clearCart } = useCart();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_email: '',
