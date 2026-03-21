@@ -52,6 +52,8 @@ const Checkout = () => {
           shipping_address: formData.shipping_address,
           total_amount: totalAmount,
           notes: formData.notes || null,
+          payment_method: paymentMethod,
+          payment_status: paymentMethod === 'cod' ? 'cod_pending' : 'pending',
         })
         .select()
         .single();
