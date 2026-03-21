@@ -39,6 +39,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/track-order" element={<TrackOrder />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
